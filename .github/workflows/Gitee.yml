@@ -2,8 +2,9 @@ name: Sync Gitee
 
 on:
   push:
-    branches:
-      - master
+    branches: master
+  schedule:
+    - cron: 0 0 * * *
 
 jobs:
   repo-sync:
