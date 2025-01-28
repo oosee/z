@@ -1,33 +1,27 @@
 name: Sync Gitee
 
 on:
-  push:
-    branches: master
+  workflow_dispatch:
   schedule:
-    - cron: 0 0 * * *
+    - cron: 0 1 * * *
 
 jobs:
-  repo-sync:
+  sync:
     name: Sync Gitee
     env:
-      dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
-      dst_token: ${{ secrets.GITEE_TOKEN }}
+      gitee_repo: ${{ secrets.GITEE_REPO }}
+      gitee_token: ${{ secrets.GITEE_TOKEN }}
       gitee_user: ${{ secrets.GITEE_USER }}
+      gitee_branch: ${{ secrets.GITEE_BRANCH }}
+
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v2
-        with:
-          persist-credentials: false
+    - name: Checkout repository
+      uses: actions/checkout@v2
 
-      - name: Sync Gitee
-        uses: Yikun/hub-mirror-action@master
-        if: env.dst_key && env.dst_token && env.gitee_user
-        with:
-          src: 'github/${{ github.repository_owner }}'
-          dst: 'gitee/${{ secrets.GITEE_USER }}'
-          dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
-          dst_token:  ${{ secrets.GITEE_TOKEN }}
-          static_list: ${{ github.event.repository.name }}
-          mappings: "z=>zz"
-          force_update: true
+    - name: Add Gitee remote and sync
+      run: |
+        git remote add gitee https://${{ env.gitee_user }}:${{ env.gitee_token }}@gitee.com/${{ env.gitee_user }}/${{ env.gitee_repo }}.git
+        git fetch origin ${{ env.gitee_branch }}
+        git push --force gitee ${{ env.gitee_branch }}:${{ env.gitee_branch }}
